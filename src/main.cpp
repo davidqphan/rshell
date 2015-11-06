@@ -40,13 +40,12 @@ int main(int argc, char **argv)
     getLogin(userName);
     char hostarray[64]; 
     getHost(hostarray);
-    //This will get the login username as well as the current host
-    if(getlogin() != NULL)
-        cout << userName << "@" << hostarray;
 	
     while(true)
     {
-        cout << get_current_dir_name () << " $ ";
+	    //This will get the login username as well as the current host
+    	if(getlogin() != NULL)
+        cout << userName << "@" << hostarray << " $ ";
 	
 	char command[128];
 
