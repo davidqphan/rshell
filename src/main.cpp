@@ -13,9 +13,6 @@
 using namespace std;
 using namespace boost;
 
-
-int status; //Global Variable
-
 //This function gets the current login username
 void getLogin(string userName)
 {
@@ -36,8 +33,134 @@ void getHost(char hostArray[])
 	    perror("Failed to get hostname");
 	}
 }
+
+// parses a command from the vector of cmds
+string parse(int semicolon, int connectorAnd, int connectorOr, bool& invalid,
+			 string cmd, vector <string>& cmds, string tempCmd)
+{
+    char_separator<char> delim(" ;&|#",";&|#", keep_empty_tokens);
+    tokenizer< char_separator<char> > mytok(cmd, delim);   
+
+	tempCmd = "";
+	for(tokenizer<char_separator<char> >::iterator it = mytok.begin(); it != mytok.end(); it++)
+    {
+        if(*it == ""); //This will do nothing  if it come across a space
+        //This will take care of the ;
+        else if(*it == ";") 
+        {
+            semicolon++;
+            if(semicolon > 1)
+            {
+                perror("Error using ;");
+                invalid = true;
+                break;
+            }
+            else if(semicolon == 1)
+            {
+                if(connectorOr == 0 && connectorAnd == 0)
+                {
+                    if(tempCmd == "")
+                    {
+                        perror("Error no arguments before ;");
+                        invalid = true;
+                        break;
+                    }
+                    cmds.push_back(tempCmd);
+                    tempCmd = "";
+                    cmds.push_back(";");
+                    semicolon = 0;
+                }
+                else
+                {
+                    perror("Error, invalid syntax");
+                    invalid = true;
+                    break;
+                }
+            }
+            
+        }
+        else if(*it == "&") 
+        {
+            connectorAnd++;
+            if(connectorAnd > 2)
+            {
+                perror("Error using &&");
+                invalid = true;
+                break;
+            }
+            else if(connectorAnd == 2)
+            {
+                if(connectorOr == 0 && semicolon == 0 )
+                {
+                    if(tempCmd == "")
+                    {
+                        perror("No arguments before &&");
+                        invalid = true;
+                    }
+                    cmds.push_back(tempCmd);
+                    tempCmd = "";
+                    cmds.push_back("&&");
+                    connectorAnd = 0;
+                }
+                else
+                {
+                    perror("Error, invalid syntax");
+                    invalid = true;
+                    break;
+                }
+            }
+        }
+        else if(*it == "|") 
+        {
+            connectorOr++;
+            if(connectorOr > 2)
+            {
+                perror("Error using ||");
+                invalid = true;
+                break;
+            }
+            else if(connectorOr == 2)
+            {
+                if(connectorAnd == 0 && semicolon == 0)
+                {
+                    if(tempCmd == "")
+                    {
+                        perror("Error no arguments before ||");
+                        invalid = true;
+                        break;
+                    }
+                    cmds.push_back(tempCmd);
+                    tempCmd = "";
+                    cmds.push_back("||");
+                    connectorOr = 0;
+                }
+                else
+                {
+                    perror("Error, invalid syntax");
+                    invalid = true;
+                    break;
+                }
+            }
+            
+        }       
+        else
+        {
+            if(semicolon != 0 || connectorOr != 0 || connectorAnd != 0)
+            {
+                perror("Error, invalid syntax");
+                invalid = true;
+                break;
+            }
+            if(tempCmd != "")
+                tempCmd += ' ';
+            tempCmd += *it;
+        }
+    }
+    return tempCmd;
+}
+
 //The fork function that does the forking
-void forking(int pid, char* input[])
+void forking(int pid, char* input[], int status)
 {
 	if(pid == -1)
 	{
@@ -47,7 +170,7 @@ void forking(int pid, char* input[])
 	else if(pid == 0)
 	{
 		status = execvp(input[0], input);
-		if(-1 == status)
+		if(status == -1)
 		{
 			perror("Error in execvp");
 		}
@@ -55,7 +178,7 @@ void forking(int pid, char* input[])
 	}
 	else if(pid > 0)
 	{
-		if(-1 == waitpid(pid, &status, 0))
+		if(waitpid(pid, &status, 0) == -1)
 		{
 			perror("wait() had an error.");
 		}
@@ -64,7 +187,8 @@ void forking(int pid, char* input[])
 
 int main(int argc, char **argv)
 {
-	bool done = false; //fininsh
+	int status; 
+	bool done = false; //finish
     string userName = getlogin();
     getLogin(userName);
     char hostArray[64]; 
@@ -75,15 +199,18 @@ int main(int argc, char **argv)
     	string cmd = "";
     	vector <string> cmds;
     	int semicolon = 0;
+    	int connectorAnd = 0;
+    	int connectorOr = 0;
+
     	bool invalid = false; //user inputted an invalid bash commmand
 
-	    //This will get the login username as well as the current host
+	    //This will get the login username as well as the cmdLetter host
     	if(getlogin() != NULL)
     	{
-        	cout << userName << "@" << hostArray;
+        	cout << userName << "@" << hostArray ;
     	}
 
-    	cout<<" $ ";
+    	cout << " $ ";
 
 	    getline(cin, cmd);
 
@@ -94,124 +221,89 @@ int main(int argc, char **argv)
     	}
 
     	//check for spaces
-    	if(cmd == "")
-    	{
+    	if(cmd == "")   	
     		continue;
-    	}
 
     	//Tokenizing and Parsing
-    	char_separator<char> delim (" #", "#", keep_empty_tokens);
-    	tokenizer< char_separator<char> > mytok(cmd, delim);
+        string tempCmd;
+        tempCmd = parse(semicolon, connectorAnd, connectorOr, invalid, cmd, cmds, tempCmd);
 
-    	
-    	string temp;
-    	for(tokenizer<char_separator<char> >::iterator it = mytok.begin(); it != mytok.end(); it++)
-    	{
-    		if(*it == ""); //This will do nothing  if it come across a space
-    		
-    		//This will take care of the ;
-    		else if(*it == ";") 
-			{
-				semicolon++;
-				if(semicolon > 1)
-				{
-					perror("Error using ;");
-					invalid = true;
-					break;
-				}
-			}
-			else if(semicolon == 1)
-			{
-				cmds.push_back(temp);
-				temp = "";
-				cmds.push_back(";");
-				semicolon = 0;
-				break;
+        cmds.push_back(tempCmd.c_str());
+        tempCmd = ""; // Reset tempCmd back to empty to get the next cmd from cmds
 
-			}	
-			else
-			{
-				if(semicolon != 0)
-				{
-					perror("Error!!");
-					invalid = true;
-					break;
-				}
-				if(temp != "")
-					temp += ' ';
-				temp += *it;
-			}
+	 	if(!invalid)
+		{
+		    char *input[200];
+		    //This is where execution cmds begins
+		    for(int i = 0; i < cmds.size(); i++)
+		    {
+		        string cmdLetter = "";
+		        string command = "";
+		        int k = 0;
+		        for(int j = 0; j < cmds.at(i).size(); j++) //Traverse through each letter
+		        {
+		            cmdLetter = cmds.at(i);
+		            if(cmdLetter[j] == ' ')
+		            {
+		                input[k] = new char[command.size() + 1];
+		                strcpy(input[k], command.c_str());
+		                k++;
+		                command = "";
+		            }
+		            else
+		                command += cmdLetter[j];        
+		        }   
+		        input[k] = new char[command.size() + 1];
+		        strcpy(input[k], command.c_str());
+		        k++;
 
-    	}
+		        input[k++] = NULL;
 
-    	cmds.push_back(temp.c_str());
-    	temp = "";
+		        if(cmds.at(i) ==  "exit") 
+		        {
+		            done = true;
+		            cout<< "Debug Test: See ya!"<<endl;
+		            break;
+		        }
+		        
+		        else if(cmds.at(i) == ";") 
+		        {
+		            continue;
+		        }
 
-    	if(!invalid)
-    	{
-	    	char* value[200];
+		        else if(cmds.at(i) == "||") 
+		        {
+		            if(status)
+		                continue;
+		            else
+		            {
+		                i++;
+		                continue;
+		            }
+		        }
 
-	    	//This is where execution cmds begins
-	    	for(int i = 0; i < cmds.size(); i++) 
-	    	{
-	    		string currentCmd = "";
-	    		string command = "";
-	    		int k = 0;
-	    		for(int j = 0; j < cmds.at(i).size(); j++)//Traverse through each letter
-	    		{
-	    			currentCmd = cmds.at(i);
-	    			if(currentCmd[j] == ' ')
-	    			{
-	    				value[k] = new char[command.size() + 1];
-	    				strcpy(value[k], command.c_str());
-	    				k++;
-	    				command = "";
-	    			}
-	    			else
-	    			{
-	    				command += currentCmd[j];
-	    			}
-	    		}
+		        else if(cmds.at(i) == "&&")
+		        {
+		            if(status == 0)
+		                continue;
+		            else
+		            {
+		                i++;
+		                continue;
+		            }
+		        }
 
-	    		value[k] = new char[command.size()+1];
-	    		strcpy(value[k], command.c_str());
-	    		k++;
+		    	int pid = fork();
+		    	forking(pid, input, status);
 
-	    		value[k] = new char[1]; 
-	    		value[k] = NULL;
-
-	    		if(cmds.at(i) == "exit")
-	    		{
-	    			done = true;
-	    			cout<< "Debug Test: See ya!"<<endl;
-	    			break;
-	    		}
-
-	    		else if(cmds.at(i) == ";")
-	    		{
-	    			if(status)
-	    			{
-	    				continue;
-	    			}
-	    			else
-	    			{
-	    				i++;
-	    				continue;
-	    			}
-	    		}
+		    	if(done)
+		    	{
+		    		cout << "Sayonara!" <<endl;
+		    		break;
+		    	}
 	    	}
-
-	    	int pid = fork();
-	    	forking(pid, value);
-
-	    	if(done)
-	    	{
-	    		cout << "Sayonara!" <<endl;
-	    		break;
-	    	}
-    	}
-    }
-
-	cout<<endl;
-	return 0;
+	    }
+	}
+	cout << "\n";
+	return 0;	
 }
