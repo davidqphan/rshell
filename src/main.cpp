@@ -12,11 +12,41 @@
 using namespace std;
 
 
-int main()
+int status; //Global Variable
+
+void getLogin(string userName)
 {
+	//unistd.h allow getlogin() that get the login username
+	if(getlogin() == NULL)
+	{
+	    userName = "";
+	    perror("Login unsuccessful");
+	}
+}
+
+void getHost(char hostArray[])
+{
+	gethostname(hostArray, 64);
+	if(gethostname(hostArray, 64) == -1)
+	{
+	    perror("Failed to get hostname");
+	}
+}
+
+int main(int argc, char **argv)
+{
+
+    string userName = getlogin();
+    getLogin(userName);
+    char hostarray[64]; 
+    getHost(hostarray);
+    //This will get the login username as well as the current host
+    if(getlogin() != NULL)
+        cout << userName << "@" << hostarray;
+	
     while(true)
     {
-        cout << get_current_dir_name () << "$ ";
+        cout << get_current_dir_name () << " $ ";
 	
 	char command[128];
 
@@ -32,7 +62,7 @@ int main()
 	    temp = strtok(NULL, " ");
 	}
 
-	char** argv = new char*[arguments.size()+1];
+	argv = new char*[arguments.size()+1];
 
 	for(int i =0; i < arguments.size(); i++)
 	{
@@ -76,8 +106,6 @@ int main()
 	}
     }
 
-    return 0;
+	cout<<endl;
+	return 0;
 }
-
-	
-
