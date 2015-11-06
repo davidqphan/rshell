@@ -1,43 +1,48 @@
-#include <iostream>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
 #include <sys/wait.h>
+#include <string.h>
+#include <unistd.h> 
+#include <stdio.h>
+#include <vector>
+#include <iostream>
 
 using namespace std;
 
-int main(int argc, char * argv[])
+int status; //Global Variable
+
+void getLogin(string userName)
 {
-	char * args[2] = {"ls", NULL} ;
-	pid_t c_pid, pid;
-	int status;
-
-	c_pid = fork();
-
-	if(c_pid < 0)
+	//unistd.h allow getlogin() that get the login username
+	if(getlogin() == NULL)
 	{
-		perror("fork failed");
-		exit(1);
+		userName = "";
+		perror("Login unsuccessful");
 	}
+}
 
-	else if (c_pid == 0)
+void getHost(char hostArray[])
+{
+	gethostname(hostArray, 64);
+	if(gethostname(hostArray, 64) == -1)
 	{
-		printf("child: executing ls\n");
-		execvp(args[0], args);
-		perror("execve failed");
-		
+		perror("Failed to get hostname");
 	}
+}
+
+int main(int argc, char **argv)
+{
+
+	string userName = getlogin();
+	getLogin(userName);
+
+	char hostarray[64]; 
+	getHost(hostarray);
+
+	//This will get the login username as well as the current host
+	if(getlogin() != NULL)
+		cout << userName << "@" << hostarray;
 	
-	else if (c_pid > 0)
-	{
-		if(pid = wait(&status) < 0)
-		{
-			perror("wait");
-			exit(1);
-		}
+	cout << " $ "; //mimic the original bash script "$" sign
 
-		printf("Parent: Finished\n");
-	}
-
+	cout<<endl;
+	return 0;
 }
