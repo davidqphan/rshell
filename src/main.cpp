@@ -43,11 +43,20 @@ int main(int argc, char **argv)
 	
     while(true)
     {
+    	string cmd = "";
+		char command[128];
+
 	    //This will get the login username as well as the current host
     	if(getlogin() != NULL)
         cout << userName << "@" << hostarray << " $ ";
-	
-	char command[128];
+
+	    getline(cin, cmd);
+	    
+	    if(cmd.find("#") != string::npos) //If found "#" within the string then enter loop
+	    {
+	    	cmd = cmd.substr(0, cmd.find("#")); //Take the everything from the string before the "#" and sotre it in cmd
+	    	cout<<"Debug Test: if statement cmd say: "<<cmd<<endl;
+    	}
 
 	cin.getline(command,128);
 
