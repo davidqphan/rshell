@@ -8,43 +8,53 @@
 #include <string>
 #include <string.h>
 #include <iostream>
-#include <boost/tokenizer.hpp>
+#include <boost/tokenizer.hpp> //The tokenizer we are using for this program
 
 using namespace std;
 using namespace boost;
 
+
 //This function gets the current login username
 void getLogin(string userName)
 {
-	//unistd.h allow getlogin() that get the login username
-	if(getlogin() == NULL)
-	{
-	    userName = "";
-	    perror("Login unsuccessful");
-	}
+    //unistd.h allow getlogin() that get the login username
+    if(getlogin() == NULL)
+    {
+        userName = "";
+        perror("Login unsuccessful");
+    }
 }
 
 //This function gets the current host that the current user is using.
 void getHost(char hostArray[])
 {
-	gethostname(hostArray, 64);
-	if(gethostname(hostArray, 64) == -1)
-	{
-	    perror("Failed to get hostname");
-	}
+    gethostname(hostArray, 64);
+    if(gethostname(hostArray, 64) == -1)
+    {
+        perror("Failed to get hostname");
+    }
 }
 
-// parses a command from the vector of cmds
+// parses a command from the vector of cmds based on the rules of the connectors
 string parse(int semicolon, int connectorAnd, int connectorOr, bool& invalid,
-			 string cmd, vector <string>& cmds, string tempCmd)
+             string cmd, vector <string>& cmds, string tempCmd)
 {
-    char_separator<char> delim(" ;&|#",";&|#", keep_empty_tokens);
-    tokenizer< char_separator<char> > mytok(cmd, delim);   
+    //comes from the built in boost library
+    //It basically breaks a sequence of characters into tokens based
+    //on character by using the delimiter function
+    char_separator<char> delim(" ;&|#",";&|#", keep_empty_tokens); 
+    tokenizer< char_separator<char> > mytok(cmd, delim); //pass in a string of command and tokenize it
 
-	tempCmd = "";
-	for(tokenizer<char_separator<char> >::iterator it = mytok.begin(); it != mytok.end(); it++)
+    tempCmd = "";
+    //Format the sequence of connectors in it's rightful place
+    //e.g. echo hello world ; echo hi
+    //else prompt an error for not using connetors correctly
+    for(tokenizer<char_separator<char> >::iterator it = mytok.begin(); it != mytok.end(); it++)
     {
+        //Iterator *it is a pointer that is declared in order to traverse the elements in 
+        //a range of elements
         if(*it == ""); //This will do nothing  if it come across a space
+
         //This will take care of the ;
         else if(*it == ";") 
         {
@@ -65,7 +75,8 @@ string parse(int semicolon, int connectorAnd, int connectorOr, bool& invalid,
                         invalid = true;
                         break;
                     }
-                    cmds.push_back(tempCmd);
+       
+		    cmds.push_back(tempCmd);
                     tempCmd = "";
                     cmds.push_back(";");
                     semicolon = 0;
@@ -160,150 +171,155 @@ string parse(int semicolon, int connectorAnd, int connectorOr, bool& invalid,
 }
 
 //The fork function that does the forking
-void forking(int pid, char* input[], int status)
+void forking(int pid, char* input[], int& status)
 {
-	if(pid == -1)
-	{
-		perror("There was an error with fork(). ");
-		exit(1);
-	}
-	else if(pid == 0)
-	{
-		status = execvp(input[0], input);
-		if(status == -1)
-		{
-			perror("Error in execvp");
-		}
-		exit(1);
-	}
-	else if(pid > 0)
-	{
-		if(waitpid(pid, &status, 0) == -1)
-		{
-			perror("wait() had an error.");
-		}
-	}
+    if(pid == -1)
+    {
+        perror("There was an error with fork(). ");
+        exit(1);
+    }
+    else if(pid == 0)
+    {
+        status = execvp(input[0], input);
+        if(status == -1)
+        {
+            perror("Error in execvp");
+        }
+        exit(1);
+    }
+    else if(pid > 0)
+    {
+        if(waitpid(pid, &status, 0) == -1)
+        {
+            perror("wait() had an error.");
+        }
+    }
 }
 
 int main(int argc, char **argv)
 {
-	int status; 
-	bool done = false; //finish
+    bool done = false; //finish
     string userName = getlogin();
     getLogin(userName);
     char hostArray[64]; 
     getHost(hostArray);
-	
+    
     while(!done)
     {
-    	string cmd = "";
-    	vector <string> cmds;
-    	int semicolon = 0;
-    	int connectorAnd = 0;
-    	int connectorOr = 0;
+        int status;
+        string cmd = "";
+        vector <string> cmds;
+        int semicolon = 0;
+        int connectorAnd = 0;
+        int connectorOr = 0;
 
-    	bool invalid = false; //user inputted an invalid bash commmand
+        bool invalid = false; //user inputted an invalid bash commmand
 
-	    //This will get the login username as well as the cmdLetter host
-    	if(getlogin() != NULL)
-    	{
-        	cout << userName << "@" << hostArray ;
-    	}
+        //This will get the login username as well as the cmdLetter host
+        if(getlogin() != NULL)
+        {
+            cout << userName << "@" << hostArray<< " $ ";
+        }
 
-    	cout << " $ ";
+        getline(cin, cmd);
 
-	    getline(cin, cmd);
+        if(cmd.find("#") != string::npos) //If found "#" within the string then enter loop
+        {
+            cmd = cmd.substr(0, cmd.find("#")); //Skip everything except before the "#"
+            cout<<"Debug Test: if statement cmd say: "<<cmd<<endl; //Debug Testing
+        }
 
-	    if(cmd.find("#") != string::npos) //If found "#" within the string then enter loop
-	    {
-	    	cmd = cmd.substr(0, cmd.find("#")); //Skip everything except before the "#"
-	    	cout<<"Debug Test: if statement cmd say: "<<cmd<<endl; //Debug Testing
-    	}
+        //check for spaces
+        if(cmd == "")       
+            continue;
 
-    	//check for spaces
-    	if(cmd == "")   	
-    		continue;
-
-    	//Tokenizing and Parsing
+        //Tokenizing and Parsing
         string tempCmd;
         tempCmd = parse(semicolon, connectorAnd, connectorOr, invalid, cmd, cmds, tempCmd);
 
         cmds.push_back(tempCmd.c_str());
         tempCmd = ""; // Reset tempCmd back to empty to get the next cmd from cmds
 
-	 	if(!invalid)
-		{
-		    char *input[200];
-		    //This is where execution cmds begins
-		    for(int i = 0; i < cmds.size(); i++)
-		    {
-		        string cmdLetter = "";
-		        string command = "";
-		        int k = 0;
-		        for(int j = 0; j < cmds.at(i).size(); j++) //Traverse through each letter
-		        {
-		            cmdLetter = cmds.at(i);
-		            if(cmdLetter[j] == ' ')
-		            {
-		                input[k] = new char[command.size() + 1];
-		                strcpy(input[k], command.c_str());
-		                k++;
-		                command = "";
-		            }
-		            else
-		                command += cmdLetter[j];        
-		        }   
-		        input[k] = new char[command.size() + 1];
-		        strcpy(input[k], command.c_str());
-		        k++;
+        if(!invalid)
+        {
+            char *input[500];
+            //This is where execution cmds begins
+            //We used unsigned instead of normal int because we're comparing the size
+            //of our vector of strings
+            for(unsigned int i = 0; i < cmds.size(); i++)
+            {
+                string cmdLetter = "";
+                string command = "";
+                int k = 0;
+                for(unsigned int j = 0; j < cmds.at(i).size(); j++) //Traverse through each letter
+                {
+                    cmdLetter = cmds.at(i);
+                    if(cmdLetter[j] == ' ')
+                    {
+                        //if there is a space, then it means
+                        //the command is done being parsed
+                        //after strcpy the command into input[k]
+                        input[k] = new char[command.size() + 1];
+                        strcpy(input[k], command.c_str());
+                        k++;
+                        command = "";
+                    }
+                    else
+                        command += cmdLetter[j];    //store each letter into command
+                }   
 
-		        input[k++] = NULL;
+                //Allocate exactly enough memory
+                //to strcpy command into input[k]
+                input[k] = new char[command.size() + 1];
+                strcpy(input[k], command.c_str());
+                k++;
 
-		        if(cmds.at(i) ==  "exit") 
-		        {
-		            done = true;
-		            cout<< "Debug Test: See ya!"<<endl;
-		            break;
-		        }
-		        
-		        else if(cmds.at(i) == ";") 
-		        {
-		            continue;
-		        }
+                //ends the input array with a null terminating character
+                input[k++] = NULL;
 
-		        else if(cmds.at(i) == "||") 
-		        {
-		            if(status)
-		                continue;
-		            else
-		            {
-		                i++;
-		                continue;
-		            }
-		        }
+                if(cmds.at(i) ==  "exit") 
+                {
+                    done = true;
+                    cout<< "Debug Test: See ya!"<<endl;
+                    break;
+                }
+                else if(cmds.at(i) == ";") 
+                {
+                    continue;
+                }
+                else if(cmds.at(i) == "&&")
+                {
+                    if(status == 0)
+                        continue;
+                    else
+                    {
+                        i++;
+                        continue;
+                    }
+                }
+                else if(cmds.at(i) == "||") 
+                {
+                    if(status)
+                        continue;
+                    else
+                    {
+                        i++;
+                        continue;
+                    }
+                }
 
-		        else if(cmds.at(i) == "&&")
-		        {
-		            if(status == 0)
-		                continue;
-		            else
-		            {
-		                i++;
-		                continue;
-		            }
-		        }
+                int pid = fork();
+                forking(pid, input, status);
+            }
 
-		    	int pid = fork();
-		    	forking(pid, input, status);
+            if(done)
+            {
+                cout << "Sayonara!" <<endl;
+                break;
+            }
 
-		    	if(done)
-		    	{
-		    		cout << "Sayonara!" <<endl;
-		    		break;
-		    	}
-	    	}
-	    }
-	}
-	cout << "\n";
-	return 0;	
+        }
+    }
+    cout << "\n";
+    return 0;   
 }
