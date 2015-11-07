@@ -1,9 +1,11 @@
-all:
-	rshell
+flags=-Wall -Werror -ansi -pedantic
 
-rshell:
-	mkdir bin
-	g++ -Wall -Werror -ansi -pedantic src/main.cpp -o bin/rshell
+all :
+		if [ ! -d bin ]; then mkdir ./bin; fi
+		g++ $(flags) src/main.cpp -o bin/rshell
 
-clean:
-	rm -rf bin/
+rshell :
+		g++ $(flags) src/main.cpp -o bin/rshell
+
+clean :
+		rm -r bin
