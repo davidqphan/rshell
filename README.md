@@ -42,6 +42,12 @@ To install and run rshell, enter the following into a terminal:
 
 * special built-in command allowing the user to exit by running ```exit``` 
 
+## Test Cases
+* ```single_command.script              #tests single commands```
+* ```multi_command.script               #tests commands with ```;```, ```&&```, or ```||``` ```
+* ```commented_command.script           #tests commands with comments``` 
+* ```exit.script                        #tests exit and commands with exit```
+
 ## Known bugs and unsupported features
 * arrow keys are not supported ```i.e. the up arrow key which allows you to run the previous command```
 
