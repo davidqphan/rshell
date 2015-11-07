@@ -6,9 +6,9 @@ Project source can be downloaded from https://github.com/dphan022/rshell.git
 
 Author & Contributor List
 ----
-David Phan
+David Phan (dphan015@ucr.edu)
 
-John Phang
+John Phang (jphan016@ucr.edu)
 
 All other known bugs and fixes can be sent to jphan016@ucr.edu
 
