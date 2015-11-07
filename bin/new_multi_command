@@ -1,0 +1,61 @@
+Script started on Fri 06 Nov 2015 10:23:05 PM PST
+[jphan016@hammer bin]$ ./rshell
+jphan016@hammer.cs.ucr.edu $ echo hello world ; ls
+hello world
+multi_command  rshell  single_command
+jphan016@hammer.cs.ucr.edu $ echo hello world; ls
+hello world
+multi_command  rshell  single_command
+jphan016@hammer.cs.ucr.edu $ ls; echo hi
+multi_command  rshell  single_command
+hi
+jphan016@hammer.cs.ucr.edu $ echo hi; ls -a ; pwd; mkdir testing
+hi
+.  ..  multi_command  rshell  single_command
+/home/csmajs/jphan016/ucr-cs100/rshell/bin
+jphan016@hammer.cs.ucr.edu $ ls -a
+.  ..  multi_command  rshell  single_command  testing
+jphan016@hammer.cs.ucr.edu $ rmdir testing
+jphan016@hammer.cs.ucr.edu $ ls -a
+.  ..  multi_command  rshell  single_command
+jphan016@hammer.cs.ucr.edu $ clear;date;echo hi && echofailed || date
+Fri Nov	 6 22:25:29 PST 2015
+hi
+Error in execvp: No such file or directory
+Fri Nov	 6 22:25:29 PST 2015
+jphan016@hammer.cs.ucr.edu $ hi; date&& echo hi
+Error in execvp: No such file or directory
+Fri Nov	 6 22:25:48 PST 2015
+hi
+jphan016@hammer.cs.ucr.edu $ pwd && date
+/home/csmajs/jphan016/ucr-cs100/rshell/bin
+Fri Nov	 6 22:26:01 PST 2015
+jphan016@hammer.cs.ucr.edu $ datesd|||dcal
+Error in execvp: No such file or directory
+    November 2015
+Su Mo Tu We Th Fr Sa
+ 1  2  3  4  5	6  7
+ 8  9 10 11 12 13 14
+15 16 17 18 19 20 21
+22 23 24 25 26 27 28
+29 30
+
+jphan016@hammer.cs.ucr.edu $ echofailed || echo hi && pwd ; date || echo do not run this
+Error in execvp: No such file or directory
+hi
+/home/csmajs/jphan016/ucr-cs100/rshell/bin
+Fri Nov	 6 22:26:55 PST 2015
+jphan016@hammer.cs.ucr.edu $ echo hi &&& echo goodbye
+Error, invalid syntax: Success
+jphan016@hammer.cs.ucr.edu $ lsh|||| echo goodbye
+Error no arguments before ||: Success
+jphan016@hammer.cs.ucr.edu $ echo work ;;;; echo do not work
+Error no arguments before ;: Success
+jphan016@hammer.cs.ucr.edu $ exit
+Debug Test: See ya!
+Sayonara!
+
+[jphan016@hammer bin]$ exit
+exit
+
+Script done on Fri 06 Nov 2015 10:28:36 PM PST

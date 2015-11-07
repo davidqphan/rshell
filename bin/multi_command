@@ -1,0 +1,61 @@
+Script started on Fri 06 Nov 2015 10:23:05 PM PST
+]0;jphan016@hammer:~/ucr-cs100/rshell/bin[?1034h[jphan016@hammer bin]$ r[K./rhsell[K[K[K[K[Kshell
+jphan016@hammer.cs.ucr.edu $ echo hello world   ; ls
+hello world
+multi_command  rshell  single_command
+jphan016@hammer.cs.ucr.edu $ echo hello world; ls
+hello world
+multi_command  rshell  single_command
+jphan016@hammer.cs.ucr.edu $ ls; echo hi
+multi_command  rshell  single_command
+hi
+jphan016@hammer.cs.ucr.edu $ echo hi; ls -a ; pwd; mkdri    rkdi    kdir testing
+hi
+.  ..  multi_command  rshell  single_command
+/home/csmajs/jphan016/ucr-cs100/rshell/bin
+jphan016@hammer.cs.ucr.edu $ ls -a
+.  ..  multi_command  rshell  single_command  testing
+jphan016@hammer.cs.ucr.edu $ rm m  k dor  ir testing
+jphan016@hammer.cs.ucr.edu $ ls -a
+.  ..  multi_command  rshell  single_command
+jphan016@hammer.cs.ucr.edu $ clear;date;echo hi && echofailed || date
+[H[2JFri Nov  6 22:25:29 PST 2015
+hi
+Error in execvp: No such file or directory
+Fri Nov  6 22:25:29 PST 2015
+jphan016@hammer.cs.ucr.edu $ hil ; date&& echo hi
+Error in execvp: No such file or directory
+Fri Nov  6 22:25:48 PST 2015
+hi
+jphan016@hammer.cs.ucr.edu $ pwd && date
+/home/csmajs/jphan016/ucr-cs100/rshell/bin
+Fri Nov  6 22:26:01 PST 2015
+jphan016@hammer.cs.ucr.edu $ calsd || date             datesd || da  cal
+Error in execvp: No such file or directory
+    November 2015   
+Su Mo Tu We Th Fr Sa
+ 1  2  3  4  5 [7m 6[27m  7
+ 8  9 10 11 12 13 14
+15 16 17 18 19 20 21
+22 23 24 25 26 27 28
+29 30
+
+jphan016@hammer.cs.ucr.edu $ echofailed || echo hi && pwd ; date || echo do not run this
+Error in execvp: No such file or directory
+hi
+/home/csmajs/jphan016/ucr-cs100/rshell/bin
+Fri Nov  6 22:26:55 PST 2015
+jphan016@hammer.cs.ucr.edu $ echo hi &&& echo goodbye
+Error, invalid syntax: Success
+jphan016@hammer.cs.ucr.edu $ echo      ls |||| echo goodbye
+Error no arguments before ||: Success
+jphan016@hammer.cs.ucr.edu $ echo work ;;;; echo do not o work
+Error no arguments before ;: Success
+jphan016@hammer.cs.ucr.edu $ exit
+Debug Test: See ya!
+Sayonara!
+
+]0;jphan016@hammer:~/ucr-cs100/rshell/bin[jphan016@hammer bin]$ exit
+exit
+
+Script done on Fri 06 Nov 2015 10:28:36 PM PST
