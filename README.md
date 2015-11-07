@@ -44,7 +44,7 @@ To install and run rshell, enter the following into a terminal:
 
 ## Test Cases
 * ```single_command.script              #tests single commands```
-* ```multi_command.script               #tests commands with ```;```, ```&&```, or ```||``` ```
+* ```multi_command.script               #tests commands with connectors ";", "&&", or "||"```
 * ```commented_command.script           #tests commands with comments``` 
 * ```exit.script                        #tests exit and commands with exit```
 
