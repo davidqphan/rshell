@@ -55,6 +55,13 @@ string parse(int semicolon, int connectorAnd, int connectorOr, bool& invalid,
         //a range of elements
         if(*it == ""); //This will do nothing  if it come across a space
 
+        else if(*it == "test")
+        {
+            cmds.push_back(tempCmd);
+            tempCmd = "";
+            cmds.push_back("test");
+        }
+
         //This will take care of the ;
         else if(*it == ";") 
         {
@@ -76,7 +83,7 @@ string parse(int semicolon, int connectorAnd, int connectorOr, bool& invalid,
                         break;
                     }
        
-		    cmds.push_back(tempCmd);
+                    cmds.push_back(tempCmd);
                     tempCmd = "";
                     cmds.push_back(";");
                     semicolon = 0;
@@ -167,6 +174,7 @@ string parse(int semicolon, int connectorAnd, int connectorOr, bool& invalid,
             tempCmd += *it;
         }
     }
+
     return tempCmd;
 }
 
@@ -196,6 +204,43 @@ void forking(int pid, char* input[], int& status)
     }
 }
 
+void test(char* input[], bool& status)
+{
+    struct stat sb;
+    int pos = 1;
+
+    //check to see if first element of f is a flag
+    if ((input[1] == "-e") || (input[1] == "-f") || (input[1] == "-d"))
+    {
+        pos++; 
+    }
+
+    //if stat fails, return a fail for success
+    if (stat(input[pos], &sb) == -1)
+    {
+        perror("stat has failed");
+        status = false;
+    }
+
+    //if stat is successful
+    switch (sb.st_mode & S_IFMT)
+    {
+        case S_IFREG:
+            if ((cmd[1] == "-e") || (cmd[1] == "-f") || (pos == 1))
+                status = true;
+            else
+                status = false;
+
+        case S_IFDIR:
+            if ((cmd[1] == "-e") || (cmd[1] == "-d") || (pos == 1))
+                status = true;
+            else
+                status = false;
+    }
+    
+    status = false;
+}
+
 int main(int argc, char **argv)
 {
     bool done = false; //finish
@@ -212,6 +257,7 @@ int main(int argc, char **argv)
         int semicolon = 0;
         int connectorAnd = 0;
         int connectorOr = 0;
+        bool valid = true;
 
         bool invalid = false; //user inputted an invalid bash commmand
 
@@ -282,6 +328,10 @@ int main(int argc, char **argv)
                     done = true;
                     cout<< "Debug Test: See ya!"<<endl;
                     break;
+                }
+                else if(cmds.at(i) == "test")
+                {
+                    test(input,valid);
                 }
                 else if(cmds.at(i) == ";") 
                 {
