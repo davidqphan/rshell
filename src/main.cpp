@@ -42,7 +42,7 @@ string parse(int semicolon, int connectorAnd, int connectorOr, bool& invalid,
     //comes from the built in boost library
     //It basically breaks a sequence of characters into tokens based
     //on character by using the delimiter function
-    char_separator<char> delim(" ;&|#",";&|#", keep_empty_tokens); 
+    char_separator<char> delim(" ;&|#()[]",";&|#()[]", keep_empty_tokens); 
     tokenizer< char_separator<char> > mytok(cmd, delim); //pass in a string of command and tokenize it
 
     tempCmd = "";
@@ -54,6 +54,26 @@ string parse(int semicolon, int connectorAnd, int connectorOr, bool& invalid,
         //Iterator *it is a pointer that is declared in order to traverse the elements in 
         //a range of elements
         if(*it == ""); //This will do nothing  if it come across a space
+
+        else if(*it == "(")
+        {
+            cout<<"Entered ( looped"<<endl;
+            cmds.push_back(tempCmd);
+            tempCmd = "";
+            cmds.push_back("(");
+            cout<<"exiting ( looped...."<<endl;
+
+        }
+        else if(*it == ")")
+        {
+            cout<<"Entered ) looped"<<endl;
+            cmds.push_back(tempCmd);
+            tempCmd = "";
+            cmds.push_back(")");
+
+
+            cout<<"exiting ) looped...."<<endl;
+        }
 
         //This will take care of the ;
         else if(*it == ";") 
@@ -76,7 +96,7 @@ string parse(int semicolon, int connectorAnd, int connectorOr, bool& invalid,
                         break;
                     }
        
-		    cmds.push_back(tempCmd);
+                    cmds.push_back(tempCmd);
                     tempCmd = "";
                     cmds.push_back(";");
                     semicolon = 0;
@@ -183,6 +203,7 @@ void forking(int pid, char* input[], int& status)
         status = execvp(input[0], input);
         if(status == -1)
         {
+            cout<<"status: "<<status<<endl;
             perror("Error in execvp");
         }
         exit(1);
@@ -280,15 +301,40 @@ int main(int argc, char **argv)
                 if(cmds.at(i) ==  "exit") 
                 {
                     done = true;
-                    cout<< "Debug Test: See ya!"<<endl;
+                    //cout<< "Debug Test: See ya!"<<endl;
                     break;
                 }
+                // else if(cmds.at(i) == "test")
+                // {
+                //         struct stat sb;
+                //         int index = 1;
+                //         if((input[1] == "-e") || (input[1] == "-f") || (input[1] == "-d"))
+                //         {
+                //             index++;
+                //             continue;
+                //         }
+                //         switch(sb.st_mode & S_IFMT)
+                //         {
+                //             case S_IFREG:
+                //                 if((input[1] == "-e") || (input[1] == "-f") || (index == 1))
+                //                 {
+                //                     cout<<"Regular File"<<endl;
+                //                 }
+                //             case S_IFDIR:
+                //                 if((input[1] == "-e") || (input[1] == "-d") || (index == 1))
+                //                 {
+                //                     cout<<"Directory"<<endl;
+                //                 }
+                //         }
+                //
                 else if(cmds.at(i) == ";") 
                 {
+                    cout<<"entered ;"<<endl;
                     continue;
                 }
                 else if(cmds.at(i) == "&&")
                 {
+                    cout<<"Entered &&"<<endl;
                     if(status == 0)
                         continue;
                     else
@@ -299,6 +345,7 @@ int main(int argc, char **argv)
                 }
                 else if(cmds.at(i) == "||") 
                 {
+                    cout<<"entered ||"<<endl;
                     if(status)
                         continue;
                     else
@@ -307,10 +354,58 @@ int main(int argc, char **argv)
                         continue;
                     }
                 }
+                else if(cmds.at(i) == "(")
+                {
+                    cout<<"DEBUG MSG HERE TOO"<<endl;
+                    // //Need to find a way to check previous connectors
+                    // if((cmd.find("&&") && done == false) || (cmd.find("||") && done == true))
+                    // {
+                    //     cout<<"This msg shows!!!!"<<endl;
+                    //     while(cmds.at(i) != ")")
+                    //         i++;
+                    //         cout<<"i is: "<<i<<endl;
+                    //         continue;
+                    // }
+
+
+                    //Need to find a way to check previous connectors
+                    //We we want to ignore the ) sign but run the rest
+                    if((cmd.find("&&") && done == false) || (cmd.find("||") && done == true))
+                    {
+                            cout<<"This msg shows!!!!"<<endl;
+                            if(cmds.at(i) == "&&")
+                            {
+                                cout<<"Entered &&"<<endl;
+                                if(status == 0)
+                                    continue;
+                                else
+                                {
+                                    i++;
+                                    continue;
+                                }
+                            }
+                            else if(cmds.at(i) == "||") 
+                            {
+                                cout<<"entered ||"<<endl;
+                                if(status)
+                                    continue;
+                                else
+                                {
+                                    i++;
+                                    continue;
+                                }
+                            }
+                            else if(cmds.at(i) == ")")
+                            {
+                                i++;
+                                continue;
+                            }
+                    }
+                }
 
                 int pid = fork();
                 forking(pid, input, status);
-            }
+                }
 
             if(done)
             {
