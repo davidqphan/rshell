@@ -203,6 +203,14 @@ int main()
                 }
             }
 
+            //If it come across "[" set it equal to test 
+            //by replacing it with "test" so it can call the test function
+            if(cmds[i] == "[")
+                cmds[i] = "test";
+
+            if(cmds[i] == "]") //Ignore the closing "]", it does not matter
+                continue;
+
             //if cmds is any of these connectors
             //it will only run if the previously assigned connector(s)
             //was a success or not based off the connector's logic
