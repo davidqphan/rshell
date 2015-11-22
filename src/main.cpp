@@ -48,30 +48,37 @@ void parse(string cmd, vector<string>& cmds)
 }
 
 //The fork function that does the forking
-void forking(int pid, char* input[], int& status)
+bool forking(char* input[])
 {
-    if(pid == -1)
+    pid_t c_pid, pid;
+    int status;
+
+    c_pid = forking();
+
+    if( c_pid < 0)
     {
-        perror("There was an error with fork(). ");
+        perror("forking failed");
         exit(1);
     }
-    else if(pid == 0)
+    
+    else if(c_pid == 0)
     {
-        status = execvp(input[0], input);
-        if(status == -1)
-        {
-            cout<<"status: "<<status<<endl;
-            perror("Error in execvp");
-        }
+        execvp( *input, input);
+        perror("execve failed");
         exit(1);
     }
-    else if(pid > 0)
+    
+    else if(c_pid > 0)
     {
-        if(waitpid(pid, &status, 0) == -1)
+        if( (pid = wait(&status)) < 0)
         {
-            perror("wait() had an error.");
+            perror("wait");
+            exit(1);
         }
     }
+    if(status != 0)
+        return false;
+    return true;
 }
 
 int main(int argc, char **argv)
