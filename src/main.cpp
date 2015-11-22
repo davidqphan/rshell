@@ -50,8 +50,8 @@ void parse(string cmd, vector<string>& cmds)
         }        
 }
 
-/The fork function that does the forking
-ool forking(char* input[])
+//The fork function that does the forking
+bool forking(char* input[])
 {
     pid_t c_pid, pid;
     int status;
@@ -106,9 +106,7 @@ int main()
         bool status = true;
         char* input[LENGTH];    
         vector <string> cmds;                                                                 
-       vector <string> cmds;
-        string prev = ";";                                    
-        //This will get the login username as well as the cmdLetter host
+       //This will get the login username as well as the cmdLetter host
         if(getlogin() != NULL)
         {
             cout << userName << "@" << hostArray<< " $ ";
