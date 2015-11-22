@@ -21,7 +21,7 @@ void getLogin(string userName)
     if(getlogin() == NULL)
     {
         userName = "";
-        perror("Login unstatusful");
+        perror("Login unsuccessful");
     }
 }
 
