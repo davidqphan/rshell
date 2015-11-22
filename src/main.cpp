@@ -1,83 +1,249 @@
-#include <unistd.h>          // allows us to use fork 
-#include <sys/types.h>      // pid_t
-#include <sys/wait.h>      // wait()
-#include <string.h>       // strtok()
-#include <stdio.h>       // perror
-#include <signal.h>
 #include <vector>
 #include <string>
+#include <stdio.h>       
+#include <string.h>       
+#include <signal.h>
 #include <string.h>
 #include <iostream>
+#include <unistd.h>     
+#include <sys/wait.h>      
+#include <sys/stat.h>
+#include <sys/types.h>      
+#include <boost/tokenizer.hpp> 
 
 using namespace std;
+using namespace boost;
 
+//This function gets the current login username
+void getLogin(string userName)
+{
+    //unistd.h allow getlogin() that get the login username
+    if(getlogin() == NULL)
+    {
+        userName = "";
+        perror("Login unsuccessful");
+    }
+}
+
+//This function gets the current host that the current user is using.
+void getHost(char hostArray[])
+{
+    gethostname(hostArray, 64);
+    if(gethostname(hostArray, 64) == -1)
+    {
+        perror("Failed to get hostname");
+    }
+}
+
+// parses a command from the vector of cmds based on the rules of the connectors
+void parse(string cmd, vector<string>& cmds)
+{       
+        //used built in boost library
+        //tokenized the characer that is being delimitized 
+        char_separator<char> delim(" ",";#[]()");
+        tokenizer <char_separator<char> > mytok(cmd, delim);
+
+        //Push back everything the user inputs
+        for(tokenizer<char_separator<char> >::iterator it = mytok.begin(); it != mytok.end(); it++)
+        {
+            cmds.push_back(*it);
+        }        
+}
+
+bool forking(char* input[])
+{
+    pid_t c_pid, pid;
+    int status;
+
+    c_pid = fork();
+
+    if(c_pid < 0)
+    {
+        perror("forking failed");
+        exit(1);
+    }
+    
+    else if(c_pid == 0)
+    {
+        execvp(*input, input);
+        perror("execvp failed");
+        exit(1);
+    }
+    
+    else if(c_pid > 0)
+    {
+        if( (pid = wait(&status)) < 0)
+        {
+            perror("wait");
+            exit(1);
+        }
+    }
+    if(status != 0)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
 
 int main()
 {
-    while(true)
+    bool done = false;
+    string userName = getlogin();
+    getLogin(userName);
+    char hostArray[64]; 
+    getHost(hostArray);
+    
+    while(!done)
     {
-        cout << get_current_dir_name () << "$ ";
-	
-	char command[128];
+        const int LENGTH = 22;
+        int counter = 0;     
+        string cmd = "";
+        string prev = ";";    
+        bool status = true;
+        char* input[LENGTH];    
+        vector <string> cmds;                                                                 
 
-	cin.getline(command,128);
+        //This will get the login username as well as the cmdLetter host
+        if(getlogin() != NULL)
+        {
+            cout << userName << "@" << hostArray<< " $ ";
+        }
 
-	vector<char*> arguments;
-	char* prog = strtok(command, " ");
-	char* temp = prog;
+        getline(cin, cmd);
 
-	while(temp != NULL)
-	{
-	    arguments.push_back(temp);
-	    temp = strtok(NULL, " ");
-	}
+        if(cmd.find("#") != string::npos) //If found "#" within the string then enter loop
+        {
+            cmd = cmd.substr(0, cmd.find("#")); //Skip everything except before the "#"
+            cout<<"Debug Test: if statement cmd say: "<<cmd<<endl; //Debug Testing
+        }
 
-	char** argv = new char*[arguments.size()+1];
+        //check for spaces
+        if(cmd == "")       
+            continue;
 
-	for(int i =0; i < arguments.size(); i++)
-	{
-	    argv[i] = arguments[i];
-	}
+        //Tokenizing and parsing
+        parse(cmd,cmds);
 
-	argv[arguments.size()] = NULL;
-
-	// checks if user wants to exit or not
-	if(strcmp(command, "exit") == 0)
-	{
-	    return 0;
-	}
-	else
-	{	
-            pid_t c_pid = fork();
-
-	    if(c_pid < 0)
+        for(unsigned int i = 0; i < cmds.size(); i++)
+        {
+            int lastCmd = cmds.size()-1;
+            if(cmds[i] == "exit")
             {
-	        perror("Error: cannot fork");
-		    return -1;
-	    }
-	    else if(c_pid == 0)
-            {
-		// child 
-		execvp(prog, argv);
+                if(prev == ";")
+                {
+                    done = true;
+                    break;
+                }
+                else if(prev == "||")
+                {
+                    if(status == true)
+                        continue;
+                    else
+                    {
+                        done = true;
+                        break;
+                    }
+                }
+                else if(prev == "&&")
+                {
+                    if(status == true)
+                    {
+                        done = true;
+                        break;
+                    }
+                    else
+                        continue;
+                }
+            }
 
-		perror(command);
-		return -1;
-	    }
-	    else
-	    {
-	        // parent. wait for child to finish
-		if(waitpid(c_pid, 0, 0) < 0)
-		{
-		    perror("Error: cannot wait for child.");
-		    return -1;
-		}
-	    }
-	
-	}
+            //if cmds is any of these connectors
+            //it will only run if the previously assigned connector(s)
+            //was a success or not based off the connector's logic
+            if(cmds[i] == ";" || cmds[i] == "||" || cmds[i] == "&&")
+            {
+                input[counter] = 0;
+                if(prev == ";")
+                {
+                    status = forking(input);
+                }
+                else if (prev == "||")
+                {
+                    if(status == false)
+                    {
+                        status = forking(input);               
+                    }
+                }
+                else if(prev == "&&")
+                {
+                    if(status == true)
+                    {
+                        status = forking(input);                
+                    }
+                }
+
+                for(int j = 0; j < LENGTH; j++)
+                {
+                    input[j] = 0;
+                }
+
+                counter = 0;
+                prev = cmds[i];
+            }
+
+            // if it is NOT a connector, store the command and arguments
+            // from cmds[] into input[] to pass into forking(...)
+            else if(cmds[i] != ";" || cmds[i] != "||" || cmds[i] != "&&")
+            {
+                char* c = const_cast<char*>(cmds[i].c_str());
+                input[counter] = c;
+                counter++;
+            }
+
+            //Check whether to run the last command or not
+            else if(i == lastCmd)
+            {
+                char* c = const_cast<char*>(cmds[i].c_str());
+                input[counter] = c;
+                input[counter + 1] = NULL;
+
+                if(prev == ";")
+                {
+                    status = forking(input);             
+                }
+                else if(prev == "&&")
+                {
+                    if(status == true)
+                    {
+                        status = forking(input);         
+                    }
+                }
+                else if(prev == "||")
+                {
+                    if(status == false)
+                    {
+                        status = forking(input);               
+                    }
+                }
+
+                for(int j = 0; j < LENGTH; j++)
+                {
+                    input[j] = NULL;
+                }
+
+                counter = 0;
+                prev = cmds[i];
+            }
+        }
+
+        if(done)
+        {
+            cout<<"Sayonara!!"<<endl;
+        }
     }
 
-    return 0;
+    cout << "\n";
+    return 0;   
 }
-
-	
-
