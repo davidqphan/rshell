@@ -1,4 +1,4 @@
-#include <vector>
+#include <unistd.h>          
 #include <string>
 #include <stdio.h>       
 #include <string.h>       
@@ -21,7 +21,7 @@ void getLogin(string userName)
     if(getlogin() == NULL)
     {
         userName = "";
-        perror("Login unsuccessful");
+        perror("Login unstatusful");
     }
 }
 
@@ -44,20 +44,21 @@ void parse(string cmd, vector<string>& cmds)
         tokenizer <char_separator<char> > mytok(cmd, delim);
 
         //Push back everything the user inputs
-        for(tokenizer<char_separator<char> >::iterator it = mytok.begin(); it != mytok.end(); it++)
+       for(tokenizer<char_separator<char> >::iterator it = mytok.begin(); it != mytok.end(); it++)
         {
             cmds.push_back(*it);
         }        
 }
 
-bool forking(char* input[])
+/The fork function that does the forking
+ool forking(char* input[])
 {
     pid_t c_pid, pid;
     int status;
 
-    c_pid = fork();
+   c_pid = fork();
 
-    if(c_pid < 0)
+    if( c_pid < 0)
     {
         perror("forking failed");
         exit(1);
@@ -65,9 +66,9 @@ bool forking(char* input[])
     
     else if(c_pid == 0)
     {
-        execvp(*input, input);
+       execvp(*input, input);
         perror("execvp failed");
-        exit(1);
+       exit(1);
     }
     
     else if(c_pid > 0)
@@ -79,7 +80,7 @@ bool forking(char* input[])
         }
     }
     if(status != 0)
-    {
+   {
         return false;
     }
     else
@@ -101,11 +102,12 @@ int main()
         const int LENGTH = 22;
         int counter = 0;     
         string cmd = "";
-        string prev = ";";    
+       string prev = ";";    
         bool status = true;
         char* input[LENGTH];    
         vector <string> cmds;                                                                 
-
+       vector <string> cmds;
+        string prev = ";";                                    
         //This will get the login username as well as the cmdLetter host
         if(getlogin() != NULL)
         {
@@ -183,7 +185,6 @@ int main()
                         status = forking(input);                
                     }
                 }
-
                 for(int j = 0; j < LENGTH; j++)
                 {
                     input[j] = 0;
@@ -202,7 +203,7 @@ int main()
                 counter++;
             }
 
-            //Check whether to run the last command or not
+           //Check whether to run the last command or not
             else if(i == lastCmd)
             {
                 char* c = const_cast<char*>(cmds[i].c_str());
@@ -235,15 +236,11 @@ int main()
 
                 counter = 0;
                 prev = cmds[i];
-            }
-        }
-
-        if(done)
+       if(done)
         {
             cout<<"Sayonara!!"<<endl;
         }
     }
-
     cout << "\n";
     return 0;   
 }
