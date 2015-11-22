@@ -51,6 +51,38 @@ void parse(string cmd, vector<string>& cmds)
         }        
 }
 
+//The test command
+void test(char* input[], bool& status)
+{
+    struct stat sb;
+    int position = 1;
+    //The flags that we are esentially using
+    if (input[1] == "-e" || input[1] == "-f" || input[1] == "-d")
+        position++;
+
+    if (stat(input[position], &sb) == -1)
+    {
+        perror("stat error");
+        status = false;
+    }
+
+    switch (sb.st_mode & S_IFMT)
+    {
+        case S_IFREG: //Macro for regular files 
+            if(position == 1 || input[1] == "-e" || input[1] == "-f")
+                status = true;
+            else
+                status = false;
+
+        case S_IFDIR: //Marcro for directories
+            if(position == 1 || input[1] == "-e" || input[1] == "-d")
+                status = true;
+            else
+                status = false;
+    }
+    status = false;
+}
+
 bool forking(char* input[])
 {
     pid_t c_pid, pid;
@@ -84,6 +116,18 @@ bool forking(char* input[])
     {
         return true;
     }
+}
+
+// calls the correct function (test or forking [which calls execvp])
+// and updates the status variable depending on which function is called
+bool run(char* input[], bool& status)
+{
+    // if the first command is test, then run test function
+    // else run fork
+    if(input[0] == "test")
+        test(input, status);                
+    else    
+        return (forking(input));   
 }
 
 int main()
