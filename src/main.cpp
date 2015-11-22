@@ -1,4 +1,3 @@
-#include <unistd.h>          
 #include <vector>
 #include <string>
 #include <stdio.h>       
@@ -6,6 +5,7 @@
 #include <signal.h>
 #include <string.h>
 #include <iostream>
+#include <unistd.h>     
 #include <sys/wait.h>      
 #include <sys/stat.h>
 #include <sys/types.h>      
@@ -21,7 +21,7 @@ void getLogin(string userName)
     if(getlogin() == NULL)
     {
         userName = "";
-        perror("Login unstatusful");
+        perror("Login unsuccessful");
     }
 }
 
@@ -37,23 +37,25 @@ void getHost(char hostArray[])
 
 // parses a command from the vector of cmds based on the rules of the connectors
 void parse(string cmd, vector<string>& cmds)
-{
-        char_separator<char> delim(" ;#[]()");
+{       
+        //used built in boost library
+        //tokenized the characer that is being delimitized 
+        char_separator<char> delim(" ",";#[]()");
         tokenizer <char_separator<char> > mytok(cmd, delim);
 
+        //Push back everything the user inputs
         for(tokenizer<char_separator<char> >::iterator it = mytok.begin(); it != mytok.end(); it++)
         {
             cmds.push_back(*it);
         }        
 }
 
-//The fork function that does the forking
 bool forking(char* input[])
 {
     pid_t c_pid, pid;
     int status;
 
-    c_pid = forking();
+    c_pid = fork();
 
     if( c_pid < 0)
     {
@@ -63,8 +65,8 @@ bool forking(char* input[])
     
     else if(c_pid == 0)
     {
-        execvp( *input, input);
-        perror("execve failed");
+        execvp(*input, input);
+        perror("execvp failed");
         exit(1);
     }
     
@@ -77,11 +79,16 @@ bool forking(char* input[])
         }
     }
     if(status != 0)
+    {
         return false;
-    return true;
+    }
+    else
+    {
+        return true;
+    }
 }
 
-int main(int argc, char **argv)
+int main()
 {
     bool done = false;
     string userName = getlogin();
@@ -91,10 +98,13 @@ int main(int argc, char **argv)
     
     while(!done)
     {
-        int status;
         string cmd = "";
-        vector <string> cmds;
-        string prev = ";";                                    
+        string prev = ";";    
+        vector <string> cmds;                                
+        int counter = 0;                                      
+        bool status = true;    
+        const int LENGTH = 22;
+        char* input[LENGTH];
 
         //This will get the login username as well as the cmdLetter host
         if(getlogin() != NULL)
@@ -117,151 +127,139 @@ int main(int argc, char **argv)
         //Tokenizing and parsing
         parse(cmd,cmds);
 
-
-        char *input[500];
-        //This is where execution cmds begins
-        //We used unsigned instead of normal int because we're comparing the size
-        //of our vector of strings
         for(unsigned int i = 0; i < cmds.size(); i++)
         {
-            string cmdLetter = "";
-            string command = "";
-            int k = 0;
-            for(unsigned int j = 0; j < cmds.at(i).size(); j++) //Traverse through each letter
+            int lastCmd = cmds.size()-1;
+            if(cmds[i] == "exit")
             {
-                cmdLetter = cmds.at(i);
-                if(cmdLetter[j] == ' ')
+                if(prev == ";")
                 {
-                    //if there is a space, then it means
-                    //the command is done being parsed
-                    //after strcpy the command into input[k]
-                    input[k] = new char[command.size() + 1];
-                    strcpy(input[k], command.c_str());
-                    k++;
-                    command = "";
+                    done = true;
+                    break;
                 }
-                else
-                    command += cmdLetter[j];    //store each letter into command
-            }   
-
-            //Allocate exactly enough memory
-            //to strcpy command into input[k]
-            input[k] = new char[command.size() + 1];
-            strcpy(input[k], command.c_str());
-            k++;
-
-            //ends the input array with a null terminating character
-            input[k++] = NULL;
-
-            if(cmds.at(i) ==  "exit") 
-            {
-                done = true;
-                //cout<< "Debug Test: See ya!"<<endl;
-                break;
-            }
-            // else if(cmds.at(i) == "test")
-            // {
-            //         struct stat sb;
-            //         int index = 1;
-            //         if((input[1] == "-e") || (input[1] == "-f") || (input[1] == "-d"))
-            //         {
-            //             index++;
-            //             continue;
-            //         }
-            //         switch(sb.st_mode & S_IFMT)
-            //         {
-            //             case S_IFREG:
-            //                 if((input[1] == "-e") || (input[1] == "-f") || (index == 1))
-            //                 {
-            //                     cout<<"Regular File"<<endl;
-            //                 }
-            //             case S_IFDIR:
-            //                 if((input[1] == "-e") || (input[1] == "-d") || (index == 1))
-            //                 {
-            //                     cout<<"Directory"<<endl;
-            //                 }
-            //         }
-            //
-            else if(cmds.at(i) == ";") 
-            {
-                cout<<"entered ;"<<endl;
-                continue;
-            }
-            else if(cmds.at(i) == "&&")
-            {
-                cout<<"Entered &&"<<endl;
-                if(status == 0)
-                    continue;
-                else
+                else if(prev == "||")
                 {
-                    i++;
-                    continue;
+                    if(status == true)
+                        continue;
+                    else
+                    {
+                        done = true;
+                        break;
+                    }
                 }
-            }
-            else if(cmds.at(i) == "||") 
-            {
-                cout<<"entered ||"<<endl;
-                if(status)
-                    continue;
-                else
+                else if(prev == "&&")
                 {
-                    i++;
-                    continue;
-                }
-            }
-            else if(cmds.at(i) == "(")
-            {
-                cout<<"DEBUG MSG HERE TOO"<<endl;
-                // //Need to find a way to check previous connectors
-                // if((cmd.find("&&") && done == false) || (cmd.find("||") && done == true))
-                // {
-                //     cout<<"This msg shows!!!!"<<endl;
-                //     while(cmds.at(i) != ")")
-                //         i++;
-                //         cout<<"i is: "<<i<<endl;
-                //         continue;
-                // }
-
-
-                //Need to find a way to check previous connectors
-                //We we want to ignore the ) sign but run the rest
-                if((cmd.find("&&") && done == false) || (cmd.find("||") && done == true))
-                {
-                        cout<<"This msg shows!!!!"<<endl;
-                        if(cmds.at(i) == "&&")
-                        {
-                            cout<<"Entered &&"<<endl;
-                            if(status == 0)
-                                continue;
-                            else
-                            {
-                                i++;
-                                continue;
-                            }
-                        }
-                        else if(cmds.at(i) == "||") 
-                        {
-                            cout<<"entered ||"<<endl;
-                            if(status)
-                                continue;
-                            else
-                            {
-                                i++;
-                                continue;
-                            }
-                        }
-                        else if(cmds.at(i) == ")")
-                        {
-                            i++;
-                            continue;
-                        }
+                    if(status == true)
+                    {
+                        done = true;
+                        break;
+                    }
+                    else
+                        continue;
                 }
             }
 
-            int pid = fork();
-            forking(pid, input, status);
+            //if cmds is any of these connectors
+            //it will only run if the previously assigned connector(s)
+            //was a success or not based off the connector's logic
+            if(cmds[i] == ")" || cmds[i] == ";" || cmds[i] == "||" || cmds[i] == "&&")
+            {
+                input[counter] = 0;
+                if(prev == ";")
+                {
+                    status = forking(input);
+                }
+                else if (prev == "||")
+                {
+                    if(status == false)
+                    {
+                        status = forking(input);               
+                    }
+                }
+                else if(prev == "&&")
+                {
+                    if(status == true)
+                    {
+                        status = forking(input);                
+                    }
+                }
+
+                for(int j = 0; j < LENGTH; j++)
+                {
+                    input[j] = 0;
+                }
+
+                counter = 0;
+                prev = cmds[i];
             }
+
+            // if it is NOT a connector, store the command and arguments
+            // from cmds[] into input[] to pass into forking(...)
+            else if(cmds[i] != "(" || cmds[i] != ";" || cmds[i] != "||" || cmds[i] != "&&")
+            {
+                char* c = const_cast<char*>(cmds[i].c_str());
+                input[counter] = c;
+                counter++;
+            }
+
+            //This essentially check for precedence and see whether or not to execute 
+            //the next command based on the previous connector and if the previous
+            //command was executed
+            else if(cmds[i] == "(")
+            {
+                if((prev == "||" && status == true) || (prev == "&&" && status == false))
+                {
+                    // increment the index until it hits ")" because it is redundant
+                    // to check the next command that should NOT be ran and check
+                    // when to end the precedence
+                    for(unsigned int j =0; cmds[i] != ")"; j++)
+                    {
+                        i++;
+                    }
+                }
+            }
+            //Check whether to run the last command or not
+            else if(i == lastCmd)
+            {
+                char* c = const_cast<char*>(cmds[i].c_str());
+                input[counter] = c;
+                input[counter + 1] = NULL;
+
+                if(prev == ";")
+                {
+                    status = forking(input);             
+                }
+                else if(prev == "&&")
+                {
+                    if(status == true)
+                    {
+                        status = forking(input);         
+                    }
+                }
+                else if(prev == "||")
+                {
+                    if(status == false)
+                    {
+                        status = forking(input);               
+                    }
+                }
+
+                for(int j = 0; j < LENGTH; j++)
+                {
+                    input[j] = NULL;
+                }
+
+                counter = 0;
+                prev = cmds[i];
+            }
+        }
+
+        if(done)
+        {
+            cout<<"Sayonara!!"<<endl;
+        }
     }
+
     cout << "\n";
     return 0;   
 }
