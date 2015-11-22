@@ -211,20 +211,20 @@ int main()
                 input[counter] = 0;
                 if(prev == ";")
                 {
-                    status = forking(input);
+                    status = run(input, status);
                 }
                 else if (prev == "||")
                 {
                     if(status == false)
                     {
-                        status = forking(input);               
+                        status = run(input, status);               
                     }
                 }
                 else if(prev == "&&")
                 {
                     if(status == true)
                     {
-                        status = forking(input);                
+                        status = run(input, status);                
                     }
                 }
 
@@ -271,20 +271,20 @@ int main()
 
                 if(prev == ";")
                 {
-                    status = forking(input);             
+                    status = run(input, status);             
                 }
                 else if(prev == "&&")
                 {
                     if(status == true)
                     {
-                        status = forking(input);         
+                        status = run(input, status);         
                     }
                 }
                 else if(prev == "||")
                 {
                     if(status == false)
                     {
-                        status = forking(input);               
+                        status = run(input, status);               
                     }
                 }
 
