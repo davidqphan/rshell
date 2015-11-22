@@ -1,4 +1,3 @@
-#include <unistd.h>          
 #include <vector>
 #include <string>
 #include <stdio.h>       
@@ -11,7 +10,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>      
 #include <boost/tokenizer.hpp> 
-  
+
 using namespace std;
 using namespace boost;
 
@@ -45,7 +44,7 @@ void parse(string cmd, vector<string>& cmds)
         tokenizer <char_separator<char> > mytok(cmd, delim);
 
         //Push back everything the user inputs
-       for(tokenizer<char_separator<char> >::iterator it = mytok.begin(); it != mytok.end(); it++)
+        for(tokenizer<char_separator<char> >::iterator it = mytok.begin(); it != mytok.end(); it++)
         {
             cmds.push_back(*it);
         }        
@@ -87,7 +86,9 @@ bool forking(char* input[])
 {
     pid_t c_pid, pid;
     int status;
-   c_pid = fork();
+
+    c_pid = fork();
+
     if( c_pid < 0)
     {
         perror("forking failed");
@@ -96,10 +97,11 @@ bool forking(char* input[])
     
     else if(c_pid == 0)
     {
-       execvp(*input, input);
+        execvp(*input, input);
         perror("execvp failed");
-       exit(1);
-     }    
+        exit(1);
+    }
+    
     else if(c_pid > 0)
     {
         if( (pid = wait(&status)) < 0)
@@ -140,13 +142,14 @@ int main()
     
     while(!done)
     {
-        const int LENGTH = 22;
-        int counter = 0;     
         string cmd = "";
-       string prev = ";";    
-        bool status = true;
-        char* input[LENGTH];    
-        vector <string> cmds;                                                                 
+        string prev = ";";    
+        vector <string> cmds;                                
+        int counter = 0;                                      
+        bool status = true;    
+        const int LENGTH = 22;
+        char* input[LENGTH];
+
         //This will get the login username as well as the cmdLetter host
         if(getlogin() != NULL)
         {
@@ -183,14 +186,6 @@ int main()
                     if(status == true)
                         continue;
                     else
-                        done = true;
-                        break;
-               }
-                else if(prev == "||")
-                {
-                    if(status == true)
-                        continue;
-                    else
                     {
                         done = true;
                         break;
@@ -216,32 +211,20 @@ int main()
                 input[counter] = 0;
                 if(prev == ";")
                 {
-                    status = forking(input);
+                    status = run(input, status);
                 }
                 else if (prev == "||")
                 {
                     if(status == false)
                     {
-                        status = forking(input);               
-                   }
+                        status = run(input, status);               
+                    }
                 }
                 else if(prev == "&&")
                 {
                     if(status == true)
                     {
-                        done = true;
-                        break;
-                    }
-                    else
-                        continue;
-                }
-            }
-               for(int j = 0; j < LENGTH; j++)
-                {
-                    input[j] = 0;
-                }
-
-                       status = forking(input);                
+                        status = run(input, status);                
                     }
                 }
 
@@ -250,20 +233,20 @@ int main()
                     input[j] = 0;
                 }
 
+                counter = 0;
                 prev = cmds[i];
             }
 
             // if it is NOT a connector, store the command and arguments
             // from cmds[] into input[] to pass into forking(...)
             else if(cmds[i] != "(" || cmds[i] != ";" || cmds[i] != "||" || cmds[i] != "&&")
-           {
+            {
                 char* c = const_cast<char*>(cmds[i].c_str());
                 input[counter] = c;
                 counter++;
             }
 
-
-           //This essentially check for precedence and see whether or not to execute 
+            //This essentially check for precedence and see whether or not to execute 
             //the next command based on the previous connector and if the previous
             //command was executed
             else if(cmds[i] == "(")
@@ -288,20 +271,20 @@ int main()
 
                 if(prev == ";")
                 {
-                    status = forking(input);             
+                    status = run(input, status);             
                 }
                 else if(prev == "&&")
                 {
-                   if(status == true)
+                    if(status == true)
                     {
-                        status = forking(input);         
+                        status = run(input, status);         
                     }
                 }
                 else if(prev == "||")
                 {
                     if(status == false)
                     {
-                        status = forking(input);               
+                        status = run(input, status);               
                     }
                 }
 
@@ -312,12 +295,13 @@ int main()
 
                 counter = 0;
                 prev = cmds[i];
-           }
+            }
+        }
 
-           if(done)
-          {
+        if(done)
+        {
             cout<<"Sayonara!!"<<endl;
-          }
+        }
     }
 
     cout << "\n";
