@@ -9,6 +9,10 @@ Author & Contributor List
 David Phan (dphan015@ucr.edu)
 
 John Phang (jphan016@ucr.edu)
+=======
+David Phan
+
+John Phang
 
 All other known bugs and fixes can be sent to jphan016@ucr.edu
 
