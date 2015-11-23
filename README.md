@@ -22,7 +22,7 @@ To install and run rshell, enter the following into a terminal:
 
 2. cd rshell
 
-3. git checkout hw1
+3. git checkout hw2
 
 4. make
 
@@ -42,6 +42,31 @@ To install and run rshell, enter the following into a terminal:
 
 * special built-in command allowing the user to exit by running ```exit``` 
 
+## Test Command
+The square brackets [ ] are actually set up as the test command in bash. This command returns 0 (TRUE) if the test
+succeeds and 1 (FALSE) if the test fails. This command is very useful for writing conditions that
+can be combined with && and || to write more complex bash command structures.
+Your subset of the test command should allow the user to run the command using the keyword ```test```:
+test -e /test/file/path
+
+Additionally, the rshell should allow the user to use the symbolic version of the command
+[ -e /test/file/path ]
+
+It also allows the user to run tests using the following flags:
+* ```-e``` checks if the file/directory exists
+* ```-f``` checks if the file/directory exists and is a regular file
+* ```-d``` checks if the file/directory exists and is a directory
+If a user does not specify a flag, then the -e functionality will be used by default
+
+## Precedence Operators
+Additionally, the rshell has ( ) as precedence operators. The parentheses ( ) operators are used to 
+change the precedence of the returns of commands, connectors, and chains of connectors. 
+For example ```echo A && echo B || echo C && echo D```
+Would print the following:
+A
+B
+D
+
 ## Test Cases
 * ```single_command.script              #tests single commands```
 * ```multi_command.script               #tests commands with connectors ";", "&&", or "||"```
@@ -56,3 +81,5 @@ To install and run rshell, enter the following into a terminal:
 * color highlighting for directories, executables, and such are not supported
 
 * some commands are not supported because they are built-in to bash ```i.e. cd```
+
+* ```echo "hello"``` includes the quotes , it should only print ```hello```

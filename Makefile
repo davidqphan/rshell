@@ -1,3 +1,4 @@
+
 flags=-Wall -Werror -ansi -pedantic
 
 all :
@@ -8,4 +9,4 @@ rshell :
 		g++ $(flags) src/main.cpp -o bin/rshell
 
 clean :
-		rm -r bin
+		rm -rf bin

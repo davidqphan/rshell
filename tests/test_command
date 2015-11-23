@@ -1,0 +1,29 @@
+Script started on Sun 22 Nov 2015 07:55:25 PM PST
+]0;jphan016@hammer:~/ucr-cs100/rshell[?1034h[jphan016@hammer rshell]$ make
+if [ ! -d bin ]; then mkdir ./bin; fi
+g++ -Wall -Werror -ansi -pedantic src/main.cpp -o bin/rshell
+]0;jphan016@hammer:~/ucr-cs100/rshell[jphan016@hammer rshell]$ cd bin
+]0;jphan016@hammer:~/ucr-cs100/rshell/bin[jphan016@hammer bin]$ ./rshell
+jphan016@hammer.cs.ucr.edu $ test -e main.cpp && echo exist
+stat error: No such file or directory
+jphan016@hammer.cs.ucr.edu $ pwd
+/home/csmajs/jphan016/ucr-cs100/rshell/bin
+jphan016@hammer.cs.ucr.edu $ test -e rshell && echo exit st
+exist
+jphan016@hammer.cs.ucr.edu $ test -d rshell || echo not a directory
+not a directory
+jphan016@hammer.cs.ucr.edu $ [ test -f         -f rshell ] || echo he  exit st t     e hello     hi
+jphan016@hammer.cs.ucr.edu $ [ - -f rshell ] && echo hi ello
+hello
+jphan016@hammer.cs.ucr.edu $ [ -d rshell ] && e    || echo      echo not a directory
+not a directory
+jphan016@hammer.cs.ucr.edu $ [ -e rshell]    ]  ] && echo anytype       type of file
+any type of file
+jphan016@hammer.cs.ucr.edu $ [-e rshell] || ech  o dont t print this
+jphan016@hammer.cs.ucr.edu $ exit
+Sayonara!!
+
+]0;jphan016@hammer:~/ucr-cs100/rshell/bin[jphan016@hammer bin]$ exit
+exit
+
+Script done on Sun 22 Nov 2015 07:58:14 PM PST
