@@ -1,0 +1,71 @@
+Script started on Sun 22 Nov 2015 08:00:16 PM PST
+[jphan016@hammer rshell]$ ls -a
+.   .git	LICENSE	  precedence_test  src		 tests
+..  .gitignore	Makefile  README.md	   test_command
+[jphan016@hammer rshell]$ make
+if [ ! -d bin ]; then mkdir ./bin; fi
+g++ -Wall -Werror -ansi -pedantic src/main.cpp -o bin/rshell
+[jphan016@hammer rshell]$ cd bin
+[jphan016@hammer bin]$ ls -a
+.  ..  rshell
+[jphan016@hammer bin]$ ./rshell
+jphan016@hammer.cs.ucr.edu $ (echo a && echo b) || (echo c && echo d)
+a
+b
+jphan016@hammer.cs.ucr.edu $ (echo a && echob) || (echo c && echo d)
+a
+execvp failed: No such file or directory
+c
+d
+jphan016@hammer.cs.ucr.edu $ (echo a && echo b && echoc) || (echo d || echo e)
+a
+b
+execvp failed: No such file or directory
+d
+jphan016@hammer.cs.ucr.edu $ (echo a && exit) || (echo c && echo d)
+a
+Sayonara!!
+
+[jphan016@hammer bin]$ ./rshell
+jphan016@hammer.cs.ucr.edu $ (echo a && echo b) || (exit && echo c)
+a
+b
+jphan016@hammer.cs.ucr.edu $ (echo a && (echo b || echo c) && echo d)
+a
+b
+d
+jphan016@hammer.cs.ucr.edu $ (echo a && (echobb||&echooc))&& echo d)
+a
+execvp failed: No such file or directory
+c
+d
+jphan016@hammer.cs.ucr.edu $ (echo a && (echo b &&^echoc) || echo d)
+a
+b
+execvp failed: No such file or directory
+d
+jphan016@hammer.cs.ucr.edu $ (ls && ls) || cal
+rshell
+rshell
+jphan016@hammer.cs.ucr.edu $ (echo a # don't show this part)
+Debug Test: if statement cmd say: (echo a
+a
+jphan016@hammer.cs.ucr.edu $ (cal && echo b) && (echo c # don't show this)
+Debug Test: if statement cmd say: (cal && echo b) && (echo c
+    November 2015
+Su Mo Tu We Th Fr Sa
+ 1  2  3  4  5	6  7
+ 8  9 10 11 12 13 14
+15 16 17 18 19 20 21
+22 23 24 25 26 27 28
+29 30
+
+b
+c
+jphan016@hammer.cs.ucr.edu $ exit
+Sayonara!!
+
+[jphan016@hammer bin]$ exit
+exit
+
+Script done on Sun 22 Nov 2015 08:03:31 PM PST
