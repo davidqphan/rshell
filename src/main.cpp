@@ -51,35 +51,39 @@ void parse(string cmd, vector<string>& cmds)
 }
 
 //The test command
-void test(char* input[], bool& status)
+bool test(char* input[])
 {
     struct stat sb;
     int position = 1;
+    // had to use std::string because string literal compiler error with g++
+    std::string dashE = "-e";
+    std::string dashD = "-d";
+    std::string dashF = "-f";
     //The flags that we are esentially using
-    if (input[1] == "-e" || input[1] == "-f" || input[1] == "-d")
+    if (input[1] == dashE || input[1] == dashF || input[1] == dashD)
         position++;
 
     if (stat(input[position], &sb) == -1)
     {
         perror("stat error");
-        status = false;
+        return false;
     }
 
     switch (sb.st_mode & S_IFMT)
     {
         case S_IFREG: //Macro for regular files 
-            if(position == 1 || input[1] == "-e" || input[1] == "-f")
-                status = true;
+            if(position == 1 || input[1] == dashE || input[1] == dashF)
+                return true;
             else
-                status = false;
+                return false;
 
         case S_IFDIR: //Marcro for directories
-            if(position == 1 || input[1] == "-e" || input[1] == "-d")
-                status = true;
+            if(position == 1 || input[1] == dashE || input[1] == dashD)
+                return true;
             else
-                status = false;
+                return false;
     }
-    status = false;
+    return false;
 }
 
 bool forking(char* input[])
@@ -122,17 +126,16 @@ bool forking(char* input[])
 
 // calls the correct function (test or forking [which calls execvp])
 // and updates the status variable depending on which function is called
-bool run(char* input[], bool& status)
+bool run(char* input[])
 {
-    // if the first command is test, then run test function
-    // else run fork
-    if(input[0] == "test")
-        test(input, status);                
+    std::string t = "test";
+    if((input[0] == t))
+        return test(input);                
     else    
-        return (forking(input));   
+        return forking(input);
 }
 
-int main()
+int main(int argc, char* argv[])
 {
     bool done = false;
     string userName = getlogin();
@@ -173,7 +176,7 @@ int main()
 
         for(unsigned int i = 0; i < cmds.size(); i++)
         {
-            int lastCmd = cmds.size()-1;
+            unsigned int lastCmd = cmds.size()-1;
             if(cmds[i] == "exit")
             {
                 if(prev == ";")
@@ -219,20 +222,20 @@ int main()
                 input[counter] = 0;
                 if(prev == ";")
                 {
-                    status = run(input, status);
+                    status = run(input);
                 }
                 else if (prev == "||")
                 {
                     if(status == false)
                     {
-                        status = run(input, status);               
+                        status = run(input);               
                     }
                 }
                 else if(prev == "&&")
                 {
                     if(status == true)
                     {
-                        status = run(input, status);                
+                        status = run(input);            
                     }
                 }
 
@@ -270,20 +273,20 @@ int main()
 
                 if(prev == ";")
                 {
-                    status = run(input, status);             
+                    status = run(input);         
                 }
                 else if(prev == "&&")
                 {
                     if(status == true)
                     {
-                        status = run(input, status);         
+                        status = run(input);      
                     }
                 }
                 else if(prev == "||")
                 {
                     if(status == false)
                     {
-                        status = run(input, status);               
+                        status = run(input);              
                     }
                 }
 
