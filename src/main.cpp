@@ -245,15 +245,6 @@ int main()
                 prev = cmds[i];
             }
 
-            // if it is NOT a connector, store the command and arguments
-            // from cmds[] into input[] to pass into forking(...)
-            else if(cmds[i] != "(" || cmds[i] != ";" || cmds[i] != "||" || cmds[i] != "&&")
-            {
-                char* c = const_cast<char*>(cmds[i].c_str());
-                input[counter] = c;
-                counter++;
-            }
-
             //This essentially check for precedence and see whether or not to execute 
             //the next command based on the previous connector and if the previous
             //command was executed
@@ -303,6 +294,14 @@ int main()
 
                 counter = 0;
                 prev = cmds[i];
+            }
+            // if it is NOT a connector, store the command and arguments
+            // from cmds[] into input[] to pass into forking(...)
+            else if(cmds[i] != "(" || cmds[i] != ";" || cmds[i] != "||" || cmds[i] != "&&")
+            {
+                char* c = const_cast<char*>(cmds[i].c_str());
+                input[counter] = c;
+                counter++;
             }
         }
 
